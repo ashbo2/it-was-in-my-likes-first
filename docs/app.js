@@ -122,10 +122,20 @@
 
   function buildShared() {
     const A = state.a, B = state.b;
-    const bMap = new Map(B.items.map((x) => [x.id, x]));
+    // Match on x.key when present (Spotify files: title + main artist), else the platform id.
+    // If someone liked the same song twice, keep their earliest like.
+    const earliest = (items) => {
+      const m = new Map();
+      for (const x of items) {
+        const k = x.key || x.id, cur = m.get(k);
+        if (!cur || x.liked_at < cur.liked_at) m.set(k, x);
+      }
+      return m;
+    };
+    const aMap = earliest(A.items), bMap = earliest(B.items);
     const shared = [];
-    for (const x of A.items) {
-      const y = bMap.get(x.id);
+    for (const [k, x] of aMap) {
+      const y = bMap.get(k);
       if (!y) continue;
       const ta = Date.parse(x.liked_at), tb = Date.parse(y.liked_at);
       shared.push({ ...x, a_at: x.liked_at, b_at: y.liked_at, first: ta === tb ? "tie" : ta < tb ? "a" : "b", gap: Math.abs(ta - tb) });
@@ -265,7 +275,14 @@
     // Spotify likes are private, so a link can't show them to anyone else — copy a sentence instead.
     const id = $("card").dataset.id;
     let text = linkFor(id);
-    if (state.src === "sp") {
+    if (state.src === "sp" && state.b) {
+      const x = state.shared.find((r) => r.id === id);
+      const A = state.a.user.username, B = state.b.user.username;
+      const lead = x.first === "tie"
+        ? `${A} and ${B} liked "${x.title}" by ${x.artist} on Spotify at the same time.`
+        : `${x.first === "a" ? A : B} had "${x.title}" by ${x.artist} in their Spotify likes first.`;
+      text = `${lead} ${A}: ${fmtLong(x.a_at)} · ${B}: ${fmtLong(x.b_at)}.${x.url ? " " + x.url : ""}`;
+    } else if (state.src === "sp") {
       const x = state.a.items.find((r) => r.id === id);
       text = `I liked "${x.title}" by ${x.artist} on Spotify on ${fmtLong(x.liked_at)} (${agoLong(x.liked_at)}).${x.url ? " " + x.url : ""}`;
     }
@@ -345,31 +362,43 @@
     $("sp-who").hidden = !(loggedIn && state.a);
     if (loggedIn && state.a) $("sp-who").innerHTML = `logged in as <b>${esc(state.a.user.username)}</b>`;
 
-    // Exportify file flow
+    // Exportify file flow: slot A = you, slot B = optional friend
     const fromFile = state.a && state.a.fromFile;
     $("sp-steps").hidden = !!fromFile;
     $("sp-loaded").hidden = !fromFile;
     if (fromFile) $("sp-file-name").innerHTML = `loaded <b>${esc(state.a.fromFile)}</b> · ${n(state.a.items.length)} liked songs`;
+    $("sp-compare").hidden = !fromFile;
+    const friend = state.b && state.b.fromFile;
+    $("sp-drop2").hidden = !!friend;
+    $("sp-loaded2").hidden = !friend;
+    if (friend) $("sp-file2-name").innerHTML = `comparing with <b>${esc(state.b.user.username)}</b> · ${n(state.b.items.length)} liked songs`;
 
-    // Restore a file loaded earlier in this tab
+    // Restore files loaded earlier in this tab
     if (!state.a && !loggedIn) {
-      const hit = cacheGet(FILE_KEY);
-      if (hit) showSpotifyData(hit);
+      const a = cacheGet(FILE_KEY), b = cacheGet(FILE_KEY_B), names = cacheGet(NAMES_KEY);
+      if (names) { $("sp-name-a").value = names.a || ""; $("sp-name-b").value = names.b || ""; }
+      if (a) showSpotifyData(a, b);
     }
   }
 
-  function showSpotifyData(data) {
-    state.a = data;
-    state.b = null;
+  const FILE_KEY_B = "iwimlf:sp:file2", NAMES_KEY = "iwimlf:sp:names";
+  const spName = (slot) => ($(slot === "a" ? "sp-name-a" : "sp-name-b").value.trim() || (slot === "a" ? "you" : "friend"));
+
+  function showSpotifyData(a, b) {
+    state.a = a;
+    state.b = b || null;
+    if (state.a) state.a.user.username = state.a.user.permalink = spName("a");
+    if (state.b) state.b.user.username = state.b.user.permalink = spName("b");
     state.focus = null;
-    state.shown1 = PAGE;
+    state.shown1 = state.shown2 = PAGE;
     setStatus("");
-    $("single").hidden = false;
-    renderSingle();
+    $("single").hidden = !!state.b;
+    $("compare").hidden = !state.b;
+    if (state.b) { state.shared = buildShared(); renderCompare(); } else renderSingle();
     spotifyUI();
   }
 
-  async function readSpotifyFile(file) {
+  async function readSpotifyFile(file, slot) {
     if (!file) return;
     if (/\.zip$/i.test(file.name)) {
       setStatus("that's a zip — export just Liked Songs from Exportify (the Export button on that row), not Export All", true);
@@ -379,33 +408,52 @@
       setStatus("reading " + file.name + "…");
       const { items, skipped } = window.parseExportify(await file.text());
       const data = {
-        user: { id: "file", username: "you", permalink: "spotify", url: null, avatar: null, likes_count: items.length },
+        user: { id: "file-" + slot, username: spName(slot), permalink: spName(slot), url: null, avatar: null, likes_count: items.length },
         items,
         fromFile: file.name,
       };
-      cacheSet(FILE_KEY, data);
-      showSpotifyData(data);
-      if (skipped) setStatus(`${n(skipped)} song${skipped > 1 ? "s" : ""} had no like date and ${skipped > 1 ? "were" : "was"} skipped`);
+      cacheSet(slot === "a" ? FILE_KEY : FILE_KEY_B, data);
+      if (slot === "a") showSpotifyData(data, state.b);
+      else showSpotifyData(state.a, data);
+      if (skipped) setStatus(`${n(skipped)} song${skipped > 1 ? "s" : ""} in ${file.name} had no like date and ${skipped > 1 ? "were" : "was"} skipped`);
     } catch (e) {
       setStatus(e.message || "couldn't read that file", true);
     }
   }
 
-  const drop = $("sp-drop");
-  $("sp-file").addEventListener("change", (e) => { readSpotifyFile(e.target.files[0]); e.target.value = ""; });
-  drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("sp-file").click(); } });
-  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
-  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
-  drop.addEventListener("drop", (e) => readSpotifyFile(e.dataTransfer.files[0]));
-  // Dropping a file anywhere else shouldn't navigate away from the page
+  function wireDrop(zone, input, slot) {
+    input.addEventListener("change", (e) => { readSpotifyFile(e.target.files[0], slot); e.target.value = ""; });
+    zone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+    ["dragenter", "dragover"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.add("over"); }));
+    ["dragleave", "drop"].forEach((t) => zone.addEventListener(t, (e) => { e.preventDefault(); zone.classList.remove("over"); }));
+    zone.addEventListener("drop", (e) => { e.stopPropagation(); readSpotifyFile(e.dataTransfer.files[0], slot); });
+  }
+  wireDrop($("sp-drop"), $("sp-file"), "a");
+  wireDrop($("sp-drop2"), $("sp-file2"), "b");
+  // A file dropped anywhere else on the page: yours first, then your friend's
   window.addEventListener("dragover", (e) => e.preventDefault());
-  window.addEventListener("drop", (e) => { e.preventDefault(); if (state.src === "sp" && e.target !== drop && !drop.contains(e.target)) readSpotifyFile(e.dataTransfer.files[0]); });
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (state.src === "sp" && !Spotify.token()) readSpotifyFile(e.dataTransfer.files[0], state.a && state.a.fromFile ? "b" : "a");
+  });
+
+  function saveNames() {
+    cacheSet(NAMES_KEY, { a: $("sp-name-a").value, b: $("sp-name-b").value });
+    if (state.src === "sp" && state.a && state.a.fromFile) showSpotifyData(state.a, state.b);
+  }
+  $("sp-name-a").addEventListener("input", saveNames);
+  $("sp-name-b").addEventListener("input", saveNames);
+
   $("sp-reset").addEventListener("click", () => {
-    try { sessionStorage.removeItem(FILE_KEY); } catch {}
-    state.a = null;
-    $("single").hidden = true;
+    try { sessionStorage.removeItem(FILE_KEY); sessionStorage.removeItem(FILE_KEY_B); } catch {}
+    state.a = state.b = null;
+    $("single").hidden = $("compare").hidden = true;
     setStatus("");
     spotifyUI();
+  });
+  $("sp-reset2").addEventListener("click", () => {
+    try { sessionStorage.removeItem(FILE_KEY_B); } catch {}
+    showSpotifyData(state.a, null);
   });
 
   async function runSpotify() {

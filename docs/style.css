@@ -145,3 +145,12 @@ section { margin-top: 28px; }
   .row.cmp .ago small { display: inline; margin-left: 6px; }
   .d2 .lbl { display: block; font-size: 10px; color: #666; }
 }
+
+/* Spotify compare */
+.sp-compare { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+.sp-h { margin: 0; color: var(--muted); line-height: 1.5; }
+.sp-h b { color: var(--text); font-weight: 600; }
+.sp-h em { font-style: normal; opacity: .7; }
+.sp-h code { font: 12px var(--mono); color: var(--text); background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+.names { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sp-compare .drop { margin-top: 0; }

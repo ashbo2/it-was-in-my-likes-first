@@ -22,6 +22,7 @@ How it's wired:
 Spotify's API only allows 5 allowlisted users per hobby app, so the public path is a file import:
 1. The user opens [Exportify](https://exportify.net), logs in with Spotify, and exports **Liked Songs** as a CSV.
 2. They drop the CSV on the site. `docs/csvimport.js` parses it in the browser (nothing is uploaded) using the "Added At" column.
+3. Optional compare: drop a friend's Exportify file too. Songs match on title + main artist (so different releases of the same song still match), keeping each person's earliest like.
 
 Optional: direct "log in with spotify" (`docs/spotify.js`) appears only if `SPOTIFY_CLIENT_ID` is set in `docs/config.js`. It works only for the up to 5 users added in that Spotify app's User Management.
 

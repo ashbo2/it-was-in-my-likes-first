@@ -34,6 +34,14 @@
     return -1;
   }
 
+  function matchKey(title, artists) {
+    const t = title.toLowerCase()
+      .replace(/\s*[-–]\s*(\d{4}\s*)?(remaster(ed)?|radio edit|single version|mono|stereo)( \d{4})?\s*$/i, "")
+      .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const a = (artists.split(",")[0] || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    return t + "|" + a;
+  }
+
   window.parseExportify = function (text) {
     const rows = parseCsv(text);
     if (rows.length < 2) throw new Error("that file is empty — export Liked Songs again");
@@ -57,12 +65,16 @@
       if (!added || isNaN(t) || new Date(t).getUTCFullYear() < 2000) { skipped++; return; }
       const uri = iUri !== -1 ? (r[iUri] || "").trim() : "";
       const id = uri.split(":").pop() || "row" + n;
+      const title = (r[iName] || "").trim() || "(untitled)";
+      const artists = iArtist !== -1 ? (r[iArtist] || "").trim().replace(/\s*;\s*/g, ", ") : "";
       items.push({
         id: "s" + id + "-" + n,
+        // Match key for comparing two people's files: same song even if saved from a different release
+        key: matchKey(title, artists),
         kind: "track",
         liked_at: new Date(t).toISOString(),
-        title: (r[iName] || "").trim() || "(untitled)",
-        artist: iArtist !== -1 ? (r[iArtist] || "").trim().replace(/\s*;\s*/g, ", ") : "",
+        title,
+        artist: artists,
         uploader: iAlbum !== -1 ? (r[iAlbum] || "").trim() : "",
         url: /^[A-Za-z0-9]{22}$/.test(id) ? "https://open.spotify.com/track/" + id : null,
         artwork: null,

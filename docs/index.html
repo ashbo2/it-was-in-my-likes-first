@@ -43,6 +43,24 @@
         <span id="sp-file-name"></span>
         <button type="button" class="ghost" id="sp-reset">use a different file</button>
       </div>
+
+      <div class="sp-compare" id="sp-compare" hidden>
+        <p class="sp-h"><b>Compare with a friend</b> <em>(optional)</em><br>
+          Have them do steps 1–2 on their own phone or laptop and send you their <code>.csv</code> file. Then add names and drop their file below.</p>
+        <div class="names">
+          <label class="field"><span>your name</span><input id="sp-name-a" placeholder="you" maxlength="30" autocomplete="off"></label>
+          <label class="field"><span>their name</span><input id="sp-name-b" placeholder="friend" maxlength="30" autocomplete="off"></label>
+        </div>
+        <label class="drop" id="sp-drop2" tabindex="0">
+          <input type="file" id="sp-file2" accept=".csv,text/csv" hidden>
+          <span class="drop-main">drop your friend's file here</span>
+          <span class="drop-sub">or click to choose · stays on your device</span>
+        </label>
+        <div class="sp-loaded" id="sp-loaded2" hidden>
+          <span id="sp-file2-name"></span>
+          <button type="button" class="ghost" id="sp-reset2">stop comparing</button>
+        </div>
+      </div>
       <p class="sp-note">exportify is a free, independent tool. we just read the file it gives you.</p>
       <div class="sp-login-row" id="sp-login-row" hidden>
         <button type="button" id="sp-login">log in with spotify</button>
