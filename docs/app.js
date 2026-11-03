@@ -36,6 +36,9 @@
     return parts.join(", ");
   }
   const ago = (iso) => span(Date.parse(iso), Date.now());
+  // Head start between two people's like dates, in calendar terms
+  const gapSpan = (x) => span(Date.parse(x.a_at), Date.parse(x.b_at));
+  const gapText = (x) => { if (x.first === "tie") return "same time"; const s = gapSpan(x); return s.days === 0 ? "same day" : "by " + short(s); };
   // "ago" phrasing relative to today
   const agoShort = (iso) => { const s = ago(iso); return s.days === 0 ? ["today", ""] : s.days === 1 && !s.m && !s.y ? ["yesterday", ""] : [short(s), "ago"]; };
   const agoLong = (iso) => { const s = ago(iso); return s.days === 0 ? "today" : s.days === 1 && !s.m && !s.y ? "yesterday" : long(s) + " ago"; };
@@ -152,14 +155,16 @@
     );
     state.rows2 = rows;
 
+    const an = esc(A.user.username), bn = esc(B.user.username);
+    const head = `<li class="cmp-head" aria-hidden="true"><span>song</span><span>${an}</span><span>${bn}</span><span>first</span></li>`;
     $("list2").innerHTML = rows.length
-      ? rows.slice(0, state.shown2).map((x) => {
-          const who = x.first === "tie" ? "tie" : esc((x.first === "a" ? A : B).user.username);
-          const g = span(0, x.gap);
-          return `<li class="row${state.focus === x.id ? " hl" : ""}" tabindex="0" data-id="${esc(x.id)}">
-            <span class="date">${fmtDate(firstAt(x))}</span>
+      ? head + rows.slice(0, state.shown2).map((x) => {
+          const who = x.first === "tie" ? "tie" : x.first === "a" ? an : bn;
+          return `<li class="row cmp${state.focus === x.id ? " hl" : ""}" tabindex="0" data-id="${esc(x.id)}">
             <span class="t"><div class="title">${esc(x.title)}</div><div class="artist">${esc(x.artist)}</div></span>
-            <span class="ago">${who}<small>${x.first === "tie" ? "same day" : "by " + short(g)}</small></span></li>`;
+            <span class="d2${x.first === "a" ? " win" : ""}"><small class="lbl">${an}</small>${fmtDate(x.a_at)}</span>
+            <span class="d2${x.first === "b" ? " win" : ""}"><small class="lbl">${bn}</small>${fmtDate(x.b_at)}</span>
+            <span class="ago">${who}<small>${gapText(x)}</small></span></li>`;
         }).join("")
       : `<li class="empty">${q ? "nothing matches that." : "no songs in common. yet."}</li>`;
     $("more2").hidden = rows.length <= state.shown2;
@@ -183,7 +188,7 @@
         ${x.first === "tie"
           ? `<p class="big">dead heat.</p><p class="when">both liked it on ${fmtLong(x.a_at)}</p>`
           : `<p class="big">${esc(winner.username)}</p>
-             <p class="when">had it first, by ${long(span(0, x.gap))}</p>
+             <p class="when">had it first, ${gapSpan(x).days === 0 ? "earlier the same day" : "by " + long(gapSpan(x))}</p>
              <p class="vs">${esc(winner.username)} · <b>${fmtLong(winAt)}</b><br>${esc(loser.username)} · ${fmtLong(loseAt)}</p>`}`;
     } else {
       html = `<p class="k">it was in my likes first</p>
@@ -290,11 +295,12 @@
             q ? `filtered: "${q}"` : null,
             `sorted: ${sortSel.options[sortSel.selectedIndex].text}`,
           ].filter(Boolean).join(" · "),
-          head: compare ? ["First liked", "Song", "Artist", "First to it", "By"] : ["Liked on", "Song", "Artist", "When"],
+          head: compare ? ["Song", "Artist", `${A.username} liked`, `${B.username} liked`, "First to it", "Head start"] : ["Liked on", "Song", "Artist", "When"],
+          dateCols: compare ? [2, 3] : [0],
           body: rows.map((x) => compare
-            ? [fmtDate(x.a_at < x.b_at ? x.a_at : x.b_at), x.title, x.artist,
+            ? [x.title, x.artist, fmtDate(x.a_at), fmtDate(x.b_at),
                x.first === "tie" ? "tie" : (x.first === "a" ? A : B).username,
-               x.first === "tie" ? "same day" : short(span(0, x.gap))]
+               gapText(x).replace(/^by /, "")]
             : [fmtDate(x.liked_at), x.title, x.artist, agoShort(x.liked_at).join(" ").trim()]),
           filename: `likes-${state.src === "sp" ? "spotify" : "soundcloud"}-${(compare ? A.permalink + "-vs-" + B.permalink : A.permalink)}.pdf`,
         });

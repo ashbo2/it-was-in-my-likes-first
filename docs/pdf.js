@@ -33,7 +33,7 @@
   // Emoji aren't in the PDF font — drop them rather than print empty boxes.
   const clean = (v) => String(v ?? "").replace(/[\u{1F000}-\u{1FAFF}\u{FE0F}\u{200D}\u{20E3}]/gu, "").replace(/\s{2,}/g, " ").trim();
 
-  window.exportPdf = async function ({ source, accent, title, subtitle, head, body, filename }) {
+  window.exportPdf = async function ({ source, accent, title, subtitle, head, body, filename, dateCols = [0] }) {
     const fonts = await load();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "letter" });
@@ -67,7 +67,21 @@
       styles: { font: "DejaVu", fontSize: 8.5, cellPadding: 5, textColor: [20, 20, 20], lineColor: [230, 230, 230], lineWidth: { bottom: 0.5 }, overflow: "linebreak" },
       headStyles: { font: "DejaVu", fontStyle: "bold", fillColor: [10, 10, 10], textColor: [255, 255, 255] },
       alternateRowStyles: { fillColor: [248, 248, 248] },
-      columnStyles: { 0: { cellWidth: 72, textColor: [110, 110, 110] }, [head.length - 1]: { textColor: accent, halign: "right" } },
+      columnStyles: Object.assign(
+        Object.fromEntries(dateCols.map((i) => [i, { cellWidth: dateCols.length > 1 ? 82 : 72, textColor: [110, 110, 110] }])),
+        { [head.length - 1]: { textColor: accent, halign: "right" } }
+      ),
+      // In comparisons, bold the date of whoever liked it first.
+      didParseCell: (d) => {
+        if (d.section !== "body" || dateCols.length < 2 || !dateCols.includes(d.column.index)) return;
+        const r = d.row.raw;
+        const winner = r[4];
+        const isA = d.column.index === dateCols[0];
+        if (winner !== "tie" && ((isA && winner === head[2].replace(/ liked$/, "")) || (!isA && winner === head[3].replace(/ liked$/, "")))) {
+          d.cell.styles.fontStyle = "bold";
+          d.cell.styles.textColor = [20, 20, 20];
+        }
+      },
       didDrawPage: () => {
         doc.setFont("DejaVu", "normal");
         doc.setFontSize(8);

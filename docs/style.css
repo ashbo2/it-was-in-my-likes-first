@@ -86,6 +86,16 @@ section { margin-top: 28px; }
 .row .ago { font: 13px var(--mono); color: var(--orange); white-space: nowrap; text-align: right; }
 .row .ago small { display: block; color: var(--muted); font-size: 11px; }
 .row.hl { background: var(--orange-dim); }
+
+/* comparison rows: song | A's date | B's date | who was first */
+.cmp-head, .row.cmp { grid-template-columns: 1fr 104px 104px 92px; }
+.cmp-head { display: grid; gap: 14px; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); font: 11px var(--mono); color: var(--muted); }
+.cmp-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-head span:last-child { text-align: right; }
+.d2 { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+.d2.win { color: var(--text); font-weight: 500; }
+.d2.win::after { content: " ★"; color: var(--orange); }
+.d2 .lbl { display: none; }
 .empty { color: var(--muted); padding: 24px 8px; }
 
 .more { display: block; margin: 18px auto 0; background: transparent; color: var(--text); border: 1px solid var(--line); }
@@ -114,4 +124,10 @@ section { margin-top: 28px; }
   .controls { grid-template-columns: 1fr; }
   .row { grid-template-columns: 1fr auto; gap: 4px 12px; }
   .row .date { grid-column: 1 / -1; }
+  .cmp-head { display: none; }
+  .row.cmp { grid-template-columns: 1fr 1fr; }
+  .row.cmp .t { grid-column: 1 / -1; }
+  .row.cmp .ago { grid-column: 1 / -1; text-align: left; }
+  .row.cmp .ago small { display: inline; margin-left: 6px; }
+  .d2 .lbl { display: block; font-size: 10px; color: #666; }
 }

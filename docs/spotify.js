@@ -84,7 +84,7 @@
         continue;
       }
       if (res.status === 401) { logout(); throw new Error("spotify session expired — log in again"); }
-      if (res.status === 403) throw new Error("spotify says this account isn't allowed yet — ask Asher to add you");
+      if (res.status === 403) throw new Error("this site is in spotify's limited mode — the site owner has to add your spotify email before you can log in");
       if (!res.ok) throw new Error(`spotify returned ${res.status}`);
       return res.json();
     }
