@@ -1,0 +1,12 @@
+name = "it-was-in-my-likes-first"
+main = "worker/src/index.js"
+compatibility_date = "2026-10-01"
+
+# The site in docs/ is served as static files; anything that isn't a file
+# (/user, /likes) falls through to the worker.
+[assets]
+directory = "./docs"
+
+[vars]
+# Only these sites may call the API (keeps strangers off your free quota).
+ALLOWED_ORIGINS = "https://ashbo2.github.io,https://it-was-in-my-likes-first.ashbo2mail.workers.dev"

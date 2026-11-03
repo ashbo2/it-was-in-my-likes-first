@@ -4,31 +4,19 @@ Receipts for your SoundCloud taste. Enter a username to see every public like wi
 
 - `docs/` — the static site (GitHub Pages serves this folder)
 - `worker/` — Cloudflare Worker that fetches likes from SoundCloud (free plan)
-
-The site runs on demo data until `docs/config.js` points at your worker.
+- `docs/config.js` — API address; set it to `""` (or add `?demo` to any URL) for demo data
 
 ## Deploy
 
-### 1. Cloudflare Worker
-1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com/sign-up).
-2. Install Node.js 18+ and run:
-   ```sh
-   cd worker
-   npx wrangler login
-   npx wrangler deploy
-   ```
-3. Copy the URL it prints (`https://it-was-in-my-likes-first.<you>.workers.dev`).
-4. Check it: open `<worker URL>/user?u=<your soundcloud username>`. You should see your user info as JSON.
+Live at:
+- https://it-was-in-my-likes-first.ashbo2mail.workers.dev (site + API on Cloudflare)
+- https://ashbo2.github.io/it-was-in-my-likes-first/ (site on GitHub Pages, calls the API above)
 
-### 2. GitHub Pages
-1. Paste the worker URL into `docs/config.js`.
-2. Create a public repo named `it-was-in-my-likes-first` and push this folder.
-3. In the repo: **Settings → Pages → Deploy from a branch → `main` / `/docs`**.
-4. The site goes live at `https://<github-username>.github.io/it-was-in-my-likes-first/`.
-
-### 3. Lock the worker to your site (recommended)
-1. In `worker/wrangler.toml`, set `ALLOWED_ORIGINS = "https://<github-username>.github.io"`.
-2. Run `npx wrangler deploy` again.
+How it's wired:
+1. Cloudflare Workers Builds is connected to this repo and redeploys on every push to `main` (root directory: repo root).
+2. `wrangler.toml` serves `docs/` as static files and routes everything else (`/user`, `/likes`) to `worker/src/index.js`.
+3. GitHub Pages serves `docs/` from `main`.
+4. `ALLOWED_ORIGINS` in `wrangler.toml` limits which sites may call the API.
 
 ## Share links
 - `?u=asher`: one account's likes

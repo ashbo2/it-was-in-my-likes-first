@@ -1,9 +1,0 @@
-name = "it-was-in-my-likes-first"
-main = "src/index.js"
-compatibility_date = "2026-10-01"
-
-[vars]
-# Lock the worker to your site so nobody else burns your free quota.
-# Replace with your GitHub Pages origin after the first deploy, e.g.
-# ALLOWED_ORIGINS = "https://YOUR-GITHUB-USERNAME.github.io"
-ALLOWED_ORIGINS = "*"
