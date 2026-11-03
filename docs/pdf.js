@@ -1,0 +1,82 @@
+// One-click PDF export. Libraries and font load only when someone clicks "export pdf".
+(function () {
+  let ready = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("couldn't load " + src));
+      document.head.appendChild(s);
+    });
+  }
+  async function fontB64(path) {
+    const buf = await (await fetch(path)).arrayBuffer();
+    let bin = "";
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+  function load() {
+    if (!ready) {
+      ready = (async () => {
+        await loadScript("vendor/jspdf.umd.min.js");
+        await loadScript("vendor/jspdf.plugin.autotable.min.js");
+        const [reg, bold] = await Promise.all([fontB64("vendor/DejaVuSans.ttf"), fontB64("vendor/DejaVuSans-Bold.ttf")]);
+        return { reg, bold };
+      })().catch((e) => { ready = null; throw e; });
+    }
+    return ready;
+  }
+
+  // Emoji aren't in the PDF font — drop them rather than print empty boxes.
+  const clean = (v) => String(v ?? "").replace(/[\u{1F000}-\u{1FAFF}\u{FE0F}\u{200D}\u{20E3}]/gu, "").replace(/\s{2,}/g, " ").trim();
+
+  window.exportPdf = async function ({ source, accent, title, subtitle, head, body, filename }) {
+    const fonts = await load();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    doc.addFileToVFS("DejaVuSans.ttf", fonts.reg);
+    doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
+    doc.addFileToVFS("DejaVuSans-Bold.ttf", fonts.bold);
+    doc.addFont("DejaVuSans-Bold.ttf", "DejaVu", "bold");
+
+    const W = doc.internal.pageSize.getWidth(), M = 40;
+    const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+    doc.setFillColor(...accent);
+    doc.rect(0, 0, W, 6, "F");
+    doc.setFont("DejaVu", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...accent);
+    doc.text(`IT WAS IN MY LIKES FIRST  ·  ${source.toUpperCase()}`, M, 34);
+    doc.setTextColor(10, 10, 10);
+    doc.setFontSize(20);
+    doc.text(clean(title), M, 60);
+    doc.setFont("DejaVu", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(110, 110, 110);
+    doc.text(`${clean(subtitle)}  ·  exported ${today}`, M, 76);
+
+    doc.autoTable({
+      startY: 92,
+      margin: { left: M, right: M, bottom: 40 },
+      head: [head],
+      body: body.map((r) => r.map(clean)),
+      styles: { font: "DejaVu", fontSize: 8.5, cellPadding: 5, textColor: [20, 20, 20], lineColor: [230, 230, 230], lineWidth: { bottom: 0.5 }, overflow: "linebreak" },
+      headStyles: { font: "DejaVu", fontStyle: "bold", fillColor: [10, 10, 10], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      columnStyles: { 0: { cellWidth: 72, textColor: [110, 110, 110] }, [head.length - 1]: { textColor: accent, halign: "right" } },
+      didDrawPage: () => {
+        doc.setFont("DejaVu", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        const h = doc.internal.pageSize.getHeight();
+        doc.text(`page ${doc.internal.getNumberOfPages()}`, W - M, h - 20, { align: "right" });
+      },
+    });
+
+    doc.save(filename.replace(/[^\w.-]+/g, "-"));
+  };
+})();

@@ -6,7 +6,7 @@
   const MAX_PAGES = 100; // 20k likes safety cap
   const DAY = 86400000;
 
-  const state = { a: null, b: null, rows1: [], rows2: [], shown1: PAGE, shown2: PAGE, focus: null };
+  const state = { src: "sc", a: null, b: null, rows1: [], rows2: [], shown1: PAGE, shown2: PAGE, focus: null };
 
   // ---------- formatting ----------
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -18,7 +18,9 @@
     const a = new Date(Math.min(fromMs, toMs)), b = new Date(Math.max(fromMs, toMs));
     let months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
     if (b.getDate() < a.getDate()) months--;
-    const days = Math.floor((b - a) / DAY);
+    // Calendar days in the viewer's time zone (yesterday 11pm → today 9am = 1 day).
+    const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((midnight(b) - midnight(a)) / DAY);
     return { y: Math.floor(months / 12), m: months % 12, days };
   }
   function short(s) {
@@ -34,6 +36,9 @@
     return parts.join(", ");
   }
   const ago = (iso) => span(Date.parse(iso), Date.now());
+  // "ago" phrasing relative to today
+  const agoShort = (iso) => { const s = ago(iso); return s.days === 0 ? ["today", ""] : s.days === 1 && !s.m && !s.y ? ["yesterday", ""] : [short(s), "ago"]; };
+  const agoLong = (iso) => { const s = ago(iso); return s.days === 0 ? "today" : s.days === 1 && !s.m && !s.y ? "yesterday" : long(s) + " ago"; };
 
   // ---------- data ----------
   async function api(path) {
@@ -97,16 +102,16 @@
 
     const oldest = items.reduce((m, x) => (!m || x.liked_at < m ? x.liked_at : m), null);
     $("single-summary").innerHTML = items.length
-      ? `<b>${esc(user.username)}</b> · ${n(items.length)} public likes · liking since <span class="o">${oldest ? fmtDate(oldest) : "—"}</span>`
-      : `<b>${esc(user.username)}</b> has no public likes.`;
+      ? `<b>${esc(user.username)}</b> · ${n(items.length)} ${state.src === "sp" ? "liked songs" : "public likes"} · liking since <span class="o">${oldest ? fmtDate(oldest) : "—"}</span>`
+      : `<b>${esc(user.username)}</b> has no ${state.src === "sp" ? "liked songs" : "public likes"}.`;
 
     $("list1").innerHTML = rows.length
       ? rows.slice(0, state.shown1).map((x) => {
-          const s = ago(x.liked_at);
+          const [main, sub] = agoShort(x.liked_at);
           return `<li class="row${state.focus === x.id ? " hl" : ""}" tabindex="0" data-id="${esc(x.id)}">
             <span class="date">${fmtDate(x.liked_at)}</span>
             <span class="t"><div class="title">${esc(x.title)}</div><div class="artist">${esc(x.artist)}</div></span>
-            <span class="ago">${short(s)}<small>ago</small></span></li>`;
+            <span class="ago">${main}<small>${sub}</small></span></li>`;
         }).join("")
       : `<li class="empty">${q ? "nothing matches that." : "no likes to show."}</li>`;
     $("more1").hidden = rows.length <= state.shown1;
@@ -183,14 +188,15 @@
     } else {
       html = `<p class="k">it was in my likes first</p>
         <p class="song">${esc(x.title)}</p><p class="by">${esc(x.artist)}</p>
-        <p class="big">${long(ago(x.liked_at))} ago</p>
+        <p class="big">${agoLong(x.liked_at)}</p>
         <p class="when">${esc(A.username)} liked it on ${fmtLong(x.liked_at)}</p>`;
     }
     $("card-body").innerHTML = html;
     $("open").href = x.url || "#";
     $("open").hidden = !x.url;
     $("card").dataset.id = id;
-    $("copy").textContent = "copy link";
+    $("copy").textContent = state.src === "sp" ? "copy text" : "copy link";
+    $("open").textContent = state.src === "sp" ? "open in spotify" : "open on soundcloud";
     if (!$("card").open) $("card").showModal();
   }
 
@@ -251,16 +257,149 @@
   $("close").addEventListener("click", () => $("card").close());
   $("card").addEventListener("click", (e) => { if (e.target === $("card")) $("card").close(); });
   $("copy").addEventListener("click", async () => {
-    const url = linkFor($("card").dataset.id);
-    try { await navigator.clipboard.writeText(url); $("copy").textContent = "copied"; }
-    catch { prompt("copy this link", url); }
+    // Spotify likes are private, so a link can't show them to anyone else — copy a sentence instead.
+    const id = $("card").dataset.id;
+    let text = linkFor(id);
+    if (state.src === "sp") {
+      const x = state.a.items.find((r) => r.id === id);
+      text = `I liked "${x.title}" by ${x.artist} on Spotify on ${fmtLong(x.liked_at)} (${agoLong(x.liked_at)}).${x.url ? " " + x.url : ""}`;
+    }
+    try { await navigator.clipboard.writeText(text); $("copy").textContent = "copied"; }
+    catch { prompt("copy this", text); }
   });
 
-  // Deep links: ?u=asher&vs=friend&t=t123
+  // ---------- pdf ----------
+  for (const btn of document.querySelectorAll(".pdf")) {
+    btn.addEventListener("click", async () => {
+      const compare = btn.dataset.list === "2";
+      const rows = compare ? state.rows2 : state.rows1;
+      if (!rows.length) return;
+      btn.disabled = true;
+      const label = btn.textContent;
+      btn.textContent = "building…";
+      try {
+        const q = $(compare ? "q2" : "q1").value.trim();
+        const sortSel = $(compare ? "sort2" : "sort1");
+        const A = state.a.user, B = state.b && state.b.user;
+        await window.exportPdf({
+          source: state.src === "sp" ? "Spotify" : "SoundCloud",
+          accent: state.src === "sp" ? [30, 215, 96] : [255, 85, 0],
+          title: compare ? `${A.username} vs ${B.username}` : A.username,
+          subtitle: [
+            compare ? `${n(rows.length)} shared likes` : `${n(rows.length)} ${state.src === "sp" ? "liked songs" : "likes"}`,
+            q ? `filtered: "${q}"` : null,
+            `sorted: ${sortSel.options[sortSel.selectedIndex].text}`,
+          ].filter(Boolean).join(" · "),
+          head: compare ? ["First liked", "Song", "Artist", "First to it", "By"] : ["Liked on", "Song", "Artist", "When"],
+          body: rows.map((x) => compare
+            ? [fmtDate(x.a_at < x.b_at ? x.a_at : x.b_at), x.title, x.artist,
+               x.first === "tie" ? "tie" : (x.first === "a" ? A : B).username,
+               x.first === "tie" ? "same day" : short(span(0, x.gap))]
+            : [fmtDate(x.liked_at), x.title, x.artist, agoShort(x.liked_at).join(" ").trim()]),
+          filename: `likes-${state.src === "sp" ? "spotify" : "soundcloud"}-${(compare ? A.permalink + "-vs-" + B.permalink : A.permalink)}.pdf`,
+        });
+      } catch (e) {
+        setStatus("couldn't build the pdf — " + (e.message || e), true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    });
+  }
+
+  // ---------- source switch (soundcloud / spotify) ----------
+  function setSource(src, opts = {}) {
+    state.src = src;
+    document.body.classList.toggle("sp", src === "sp");
+    $("src-sc").setAttribute("aria-selected", src === "sc");
+    $("src-sp").setAttribute("aria-selected", src === "sp");
+    $("tag").textContent = `receipts for your ${src === "sp" ? "spotify" : "soundcloud"} taste.`;
+    document.querySelector('meta[name="theme-color"]').content = "#0a0a0a";
+    $("form").hidden = src === "sp";
+    $("sp-panel").hidden = src !== "sp";
+    $("demo").hidden = !(DEMO && src === "sc");
+    if (!opts.keep) {
+      $("single").hidden = $("compare").hidden = true;
+      state.a = state.b = null;
+      setStatus("");
+    }
+    try { localStorage.setItem("iwimlf:src", src); } catch {}
+    if (!opts.keep) history.replaceState(null, "", location.pathname + (src === "sp" ? "?src=spotify" : ""));
+    if (src === "sp") spotifyUI();
+  }
+
+  function spotifyUI() {
+    const loggedIn = !!Spotify.token();
+    $("sp-login").hidden = loggedIn;
+    $("sp-logout").hidden = !loggedIn;
+    $("sp-who").hidden = !(loggedIn && state.a);
+    if (loggedIn && state.a) $("sp-who").innerHTML = `logged in as <b>${esc(state.a.user.username)}</b>`;
+    if (!Spotify.configured() && !DEMO) {
+      $("sp-login").disabled = true;
+      setStatus("spotify isn't set up on this site yet.");
+    }
+  }
+
+  async function runSpotify() {
+    $("sp-login").disabled = true;
+    state.b = null;
+    state.focus = null;
+    state.shown1 = PAGE;
+    try {
+      const key = "iwimlf:sp:likes";
+      state.a = cacheGet(key);
+      if (DEMO && !Spotify.token()) {
+        await new Promise((r) => setTimeout(r, 250));
+        state.a = window.demoLikes("you");
+        state.a.items.forEach((x) => (x.url = "https://open.spotify.com/"));
+      }
+      if (!state.a) {
+        setStatus("loading your liked songs…");
+        state.a = await Spotify.loadLikes((got, total) => setStatus(`loading your liked songs · ${n(got)}${total ? " of " + n(total) : ""}`));
+        cacheSet(key, state.a);
+      }
+      setStatus("");
+      $("single").hidden = false;
+      renderSingle();
+    } catch (e) {
+      setStatus(e.message || "something went wrong", true);
+    } finally {
+      $("sp-login").disabled = false;
+      spotifyUI();
+    }
+  }
+
+  $("src-sc").addEventListener("click", () => state.src !== "sc" && setSource("sc"));
+  $("src-sp").addEventListener("click", () => {
+    if (state.src === "sp") return;
+    setSource("sp");
+    if (Spotify.token()) runSpotify();
+  });
+  $("sp-login").addEventListener("click", () => (DEMO && !Spotify.configured() ? runSpotify() : Spotify.login().catch((e) => setStatus(e.message, true))));
+  $("sp-logout").addEventListener("click", () => {
+    Spotify.logout();
+    try { sessionStorage.removeItem("iwimlf:sp:likes"); } catch {}
+    setSource("sp");
+  });
+
+  // ---------- startup ----------
   const p = new URLSearchParams(location.search);
-  if (p.get("u")) {
-    $("u").value = p.get("u");
-    $("vs").value = p.get("vs") || "";
-    run(p.get("u"), p.get("vs") || "", p.get("t"));
+  let saved = null;
+  try { saved = localStorage.getItem("iwimlf:src"); } catch {}
+  const startSp = p.get("src") === "spotify" || p.has("code") || p.has("error") || (!p.get("u") && saved === "sp");
+
+  if (startSp) {
+    setSource("sp", { keep: true });
+    Spotify.handleCallback()
+      .then(() => { if (Spotify.token()) runSpotify(); else spotifyUI(); })
+      .catch((e) => { setStatus(e.message, true); spotifyUI(); });
+  } else {
+    setSource("sc", { keep: true });
+    // Deep links: ?u=asher&vs=friend&t=t123
+    if (p.get("u")) {
+      $("u").value = p.get("u");
+      $("vs").value = p.get("vs") || "";
+      run(p.get("u"), p.get("vs") || "", p.get("t"));
+    }
   }
 })();

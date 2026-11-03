@@ -18,6 +18,17 @@ How it's wired:
 3. GitHub Pages serves `docs/` from `main`.
 4. `ALLOWED_ORIGINS` in `wrangler.toml` limits which sites may call the API.
 
+## Spotify mode
+Spotify login runs fully in the browser (PKCE) and reads the user's Liked Songs with the date each was saved. Spotify's development mode allows only 5 allowlisted users per app (and the app owner needs Premium).
+
+Setup:
+1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and select **Web API**.
+2. Add both redirect URIs exactly:
+   - `https://it-was-in-my-likes-first.ashbo2mail.workers.dev/`
+   - `https://ashbo2.github.io/it-was-in-my-likes-first/`
+3. Paste the app's Client ID into `docs/config.js` (`SPOTIFY_CLIENT_ID`).
+4. Under **User Management**, add each person's name and Spotify email (max 5, including you).
+
 ## Share links
 - `?u=asher`: one account's likes
 - `?u=asher&vs=friend`: comparison view

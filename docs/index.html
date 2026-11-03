@@ -14,10 +14,22 @@
 </head>
 <body>
   <main class="wrap">
+    <div class="src" role="tablist" aria-label="music service">
+      <button type="button" role="tab" data-src="sc" id="src-sc">soundcloud</button>
+      <button type="button" role="tab" data-src="sp" id="src-sp">spotify</button>
+    </div>
+
     <header class="top">
       <a href="./" class="mark">it was in my likes first<span class="dot">.</span></a>
-      <p class="tag">receipts for your soundcloud taste.</p>
+      <p class="tag" id="tag">receipts for your soundcloud taste.</p>
     </header>
+
+    <div id="sp-panel" class="sp-panel" hidden>
+      <button type="button" id="sp-login">log in with spotify</button>
+      <span id="sp-who" class="sp-who" hidden></span>
+      <button type="button" id="sp-logout" class="ghost" hidden>log out</button>
+      <p class="sp-note">reads your liked songs in this browser only. nothing is stored.</p>
+    </div>
 
     <form id="form" class="form" autocomplete="off">
       <label class="field">
@@ -43,6 +55,7 @@
           <option value="new">newest first</option>
           <option value="az">a–z</option>
         </select>
+        <button type="button" class="pdf ghost" data-list="1">export pdf</button>
       </div>
       <ol id="list1" class="list"></ol>
       <button id="more1" class="more" hidden>show more</button>
@@ -57,13 +70,14 @@
           <option value="old">oldest first</option>
           <option value="new">newest first</option>
         </select>
+        <button type="button" class="pdf ghost" data-list="2">export pdf</button>
       </div>
       <ol id="list2" class="list"></ol>
       <button id="more2" class="more" hidden>show more</button>
     </section>
 
     <footer class="foot">
-      public likes only · not affiliated with soundcloud
+      soundcloud: public likes only · not affiliated with soundcloud or spotify
     </footer>
   </main>
 
@@ -78,6 +92,8 @@
 
   <script src="config.js"></script>
   <script src="demo.js"></script>
+  <script src="spotify.js"></script>
+  <script src="pdf.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

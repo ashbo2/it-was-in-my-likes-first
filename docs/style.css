@@ -9,6 +9,8 @@
   --sans: "Inter Tight", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, monospace;
 }
+/* Spotify mode swaps the accent to green */
+body.sp { --orange: #1ed760; --orange-dim: #1ed76022; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { background: var(--bg); }
@@ -18,6 +20,15 @@ a { color: inherit; }
 ::selection { background: var(--orange); color: #000; }
 
 .top { margin-bottom: 36px; }
+
+.src { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 28px; }
+.src button { background: transparent; color: var(--muted); padding: 8px 18px; font-weight: 500; border-radius: 7px; transition: background .15s, color .15s; }
+.src button[aria-selected="true"] { background: var(--orange); color: #000; font-weight: 700; }
+
+.sp-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sp-who { font-size: 15px; }
+.sp-who b { color: var(--orange); }
+.sp-note { flex-basis: 100%; margin: 4px 0 0; font: 12px var(--mono); color: var(--muted); }
 .mark { font-weight: 800; font-size: clamp(30px, 7vw, 48px); letter-spacing: -0.04em; line-height: 1; text-decoration: none; }
 .dot { color: var(--orange); }
 .tag { color: var(--muted); margin: 10px 0 0; }
@@ -58,7 +69,9 @@ section { margin-top: 28px; }
 .score .mid { text-align: center; font: 12px var(--mono); color: var(--muted); }
 .score .mid b { display: block; color: var(--text); font: 700 20px var(--sans); }
 
-.controls { display: grid; grid-template-columns: 1fr 190px; gap: 10px; margin-bottom: 8px; }
+.controls { display: grid; grid-template-columns: 1fr 190px auto; gap: 10px; margin-bottom: 8px; }
+.pdf { white-space: nowrap; color: var(--text) !important; }
+.pdf:hover { border-color: var(--orange) !important; }
 
 .list { list-style: none; margin: 0; padding: 0; }
 .row {
