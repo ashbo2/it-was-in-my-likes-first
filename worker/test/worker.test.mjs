@@ -16,6 +16,11 @@ globalThis.fetch = async (input) => {
     return new Response(`x={client_id:"${staleServesLeft-- > 0 ? "OLDKEYOLDKEYOLDKEYOLDKEY12" : "NEWKEYNEWKEYNEWKEYNEWKEY34"}",y:1}`);
   }
   if (url.endsWith("0-aaa.js")) return new Response("nothing here");
+  if (url.startsWith("https://on.soundcloud.com/")) {
+    const r = new Response("ok");
+    Object.defineProperty(r, "url", { value: url.endsWith("good1") ? "https://m.soundcloud.com/asher?utm_source=share" : "https://soundcloud.com/" });
+    return r;
+  }
   if (url.startsWith("https://api-v2.soundcloud.com/")) {
     if (url.includes("client_id=OLDKEY")) return new Response("", { status: 401 });
     if (url.includes("/resolve")) {
@@ -104,4 +109,13 @@ test("origin lock", async () => {
   assert.equal(bad.status, 403);
   const pre = await worker.fetch(new Request("https://w.example/likes", { method: "OPTIONS", headers: { Origin: "https://evil.example" } }), env, {});
   assert.equal(pre.status, 403);
+});
+
+test("follows on.soundcloud.com share links", async () => {
+  const r = await call("/user?u=" + encodeURIComponent("https://on.soundcloud.com/good1"));
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).permalink, "asher");
+  assert.ok(calls.some((u) => u.includes(encodeURIComponent("https://soundcloud.com/asher"))));
+  const bad = await call("/user?u=" + encodeURIComponent("on.soundcloud.com/bad2"));
+  assert.equal(bad.status, 400);
 });

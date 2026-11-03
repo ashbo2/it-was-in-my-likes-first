@@ -37,7 +37,14 @@ export default {
 // ---------- handlers ----------
 
 async function handleUser(url, cors, ctx) {
-  const raw = url.searchParams.get("u") || "";
+  let raw = (url.searchParams.get("u") || "").trim();
+  // Share links from the SoundCloud app (on.soundcloud.com/xxxx) redirect to the profile.
+  const short = raw.match(/^(?:https?:\/\/)?on\.soundcloud\.com\/([A-Za-z0-9]+)/);
+  if (short) {
+    const res = await fetch(`https://on.soundcloud.com/${short[1]}`, { headers: { "User-Agent": UA } });
+    if (!/^https:\/\/(www\.|m\.)?soundcloud\.com\//.test(res.url)) throw httpError(400, "couldn't open that share link — paste the profile link instead");
+    raw = res.url;
+  }
   const permalink = normalizeUsername(raw);
   if (!permalink) {
     throw httpError(400, /\s/.test(raw.trim())
