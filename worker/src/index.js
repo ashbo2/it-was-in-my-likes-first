@@ -37,8 +37,13 @@ export default {
 // ---------- handlers ----------
 
 async function handleUser(url, cors, ctx) {
-  const permalink = normalizeUsername(url.searchParams.get("u"));
-  if (!permalink) throw httpError(400, "enter a SoundCloud username or profile link");
+  const raw = url.searchParams.get("u") || "";
+  const permalink = normalizeUsername(raw);
+  if (!permalink) {
+    throw httpError(400, /\s/.test(raw.trim())
+      ? "that looks like a display name — use the name from the profile link instead (soundcloud.com/name-here), or paste the whole link"
+      : "enter a SoundCloud username or profile link");
+  }
 
   const notFound = httpError(404, `no SoundCloud user called "${permalink}"`);
   let data;
