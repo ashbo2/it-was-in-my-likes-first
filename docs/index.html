@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>it was in my likes first</title>
+  <meta name="description" content="Prove you liked it on SoundCloud before everyone else.">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff5500'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <a href="./" class="mark">it was in my likes first<span class="dot">.</span></a>
+      <p class="tag">receipts for your soundcloud taste.</p>
+    </header>
+
+    <form id="form" class="form" autocomplete="off">
+      <label class="field">
+        <span>soundcloud</span>
+        <input id="u" name="u" placeholder="username or profile link" required spellcheck="false" autocapitalize="off">
+      </label>
+      <label class="field">
+        <span>vs <em>(optional)</em></span>
+        <input id="vs" name="vs" placeholder="a friend to compare" spellcheck="false" autocapitalize="off">
+      </label>
+      <button type="submit" id="go">check</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p id="demo" class="demo" hidden>demo mode · fake data until the worker is connected</p>
+
+    <section id="single" hidden>
+      <div class="summary" id="single-summary"></div>
+      <div class="controls">
+        <input id="q1" type="search" placeholder="search songs or artists" aria-label="search">
+        <select id="sort1" aria-label="sort">
+          <option value="old">oldest first</option>
+          <option value="new">newest first</option>
+          <option value="az">a–z</option>
+        </select>
+      </div>
+      <ol id="list1" class="list"></ol>
+      <button id="more1" class="more" hidden>show more</button>
+    </section>
+
+    <section id="compare" hidden>
+      <div class="score" id="score"></div>
+      <div class="controls">
+        <input id="q2" type="search" placeholder="search shared songs" aria-label="search">
+        <select id="sort2" aria-label="sort">
+          <option value="gap">biggest head start</option>
+          <option value="old">oldest first</option>
+          <option value="new">newest first</option>
+        </select>
+      </div>
+      <ol id="list2" class="list"></ol>
+      <button id="more2" class="more" hidden>show more</button>
+    </section>
+
+    <footer class="foot">
+      public likes only · not affiliated with soundcloud
+    </footer>
+  </main>
+
+  <dialog id="card" class="card">
+    <div id="card-body"></div>
+    <div class="card-actions">
+      <button id="copy" type="button">copy link</button>
+      <a id="open" target="_blank" rel="noopener">open on soundcloud</a>
+      <button id="close" type="button" class="ghost">close</button>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
