@@ -19,15 +19,11 @@ How it's wired:
 4. `ALLOWED_ORIGINS` in `wrangler.toml` limits which sites may call the API.
 
 ## Spotify mode
-Spotify login runs fully in the browser (PKCE) and reads the user's Liked Songs with the date each was saved. Spotify's development mode allows only 5 allowlisted users per app (and the app owner needs Premium).
+Spotify's API only allows 5 allowlisted users per hobby app, so the public path is a file import:
+1. The user opens [Exportify](https://exportify.net), logs in with Spotify, and exports **Liked Songs** as a CSV.
+2. They drop the CSV on the site. `docs/csvimport.js` parses it in the browser (nothing is uploaded) using the "Added At" column.
 
-Setup:
-1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and select **Web API**.
-2. Add both redirect URIs exactly:
-   - `https://it-was-in-my-likes-first.ashbo2mail.workers.dev/`
-   - `https://ashbo2.github.io/it-was-in-my-likes-first/`
-3. Paste the app's Client ID into `docs/config.js` (`SPOTIFY_CLIENT_ID`).
-4. Under **User Management**, add each person's name and Spotify email (max 5, including you).
+Optional: direct "log in with spotify" (`docs/spotify.js`) appears only if `SPOTIFY_CLIENT_ID` is set in `docs/config.js`. It works only for the up to 5 users added in that Spotify app's User Management.
 
 ## Share links
 - `?u=asher`: one account's likes

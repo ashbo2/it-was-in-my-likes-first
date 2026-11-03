@@ -25,10 +25,24 @@ a { color: inherit; }
 .src button { background: transparent; color: var(--muted); padding: 8px 18px; font-weight: 500; border-radius: 7px; transition: background .15s, color .15s; }
 .src button[aria-selected="true"] { background: var(--orange); color: #000; font-weight: 700; }
 
-.sp-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sp-panel { display: grid; gap: 14px; }
+.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: grid; gap: 18px; }
+.steps li { counter-increment: step; position: relative; padding-left: 40px; color: var(--muted); line-height: 1.5; }
+.steps li::before { content: counter(step); position: absolute; left: 0; top: -1px; width: 26px; height: 26px; border-radius: 50%; background: var(--orange); color: #000; font: 700 13px/26px var(--sans); text-align: center; }
+.steps b { color: var(--text); font-weight: 600; }
+.steps code { font: 12px var(--mono); color: var(--text); background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+.btn { display: flex; width: fit-content; margin-top: 12px; background: var(--orange); color: #000; text-decoration: none; font-weight: 700; padding: 10px 16px; border-radius: 8px; }
+.btn:hover { opacity: .9; }
+.drop { display: grid; gap: 4px; place-items: center; text-align: center; margin-top: 10px; padding: 26px 16px; border: 1.5px dashed #333; border-radius: 12px; cursor: pointer; transition: border-color .15s, background .15s; }
+.drop:hover, .drop:focus-visible, .drop.over { border-color: var(--orange); background: var(--orange-dim); outline: none; }
+.drop-main { color: var(--text); font-weight: 600; }
+.drop-sub { font: 11px var(--mono); color: var(--muted); }
+.sp-loaded { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 14px; }
+.sp-loaded b { color: var(--orange); }
+.sp-login-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .sp-who { font-size: 15px; }
 .sp-who b { color: var(--orange); }
-.sp-note { flex-basis: 100%; margin: 4px 0 0; font: 12px var(--mono); color: var(--muted); }
+.sp-note { margin: 0; font: 11px var(--mono); color: #555; }
 .mark { font-weight: 800; font-size: clamp(30px, 7vw, 48px); letter-spacing: -0.04em; line-height: 1; text-decoration: none; }
 .dot { color: var(--orange); }
 .tag { color: var(--muted); margin: 10px 0 0; }

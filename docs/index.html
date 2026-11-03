@@ -25,10 +25,30 @@
     </header>
 
     <div id="sp-panel" class="sp-panel" hidden>
-      <button type="button" id="sp-login">log in with spotify</button>
-      <span id="sp-who" class="sp-who" hidden></span>
-      <button type="button" id="sp-logout" class="ghost" hidden>log out</button>
-      <p class="sp-note">reads your liked songs in this browser only. nothing is stored.</p>
+      <ol class="steps" id="sp-steps">
+        <li>
+          <b>Get your file.</b> Open Exportify, log in with Spotify, and click <b>Export</b> next to <b>Liked Songs</b> (first row). A <code>.csv</code> file downloads.
+          <a class="btn" id="sp-exportify" href="https://exportify.net" target="_blank" rel="noopener">open exportify ↗</a>
+        </li>
+        <li>
+          <b>Drop it here.</b> Drag that file into the box below, or tap it to pick the file from your downloads.
+          <label class="drop" id="sp-drop" tabindex="0">
+            <input type="file" id="sp-file" accept=".csv,text/csv" hidden>
+            <span class="drop-main">drop liked_songs.csv here</span>
+            <span class="drop-sub">or click to choose · stays on your device, nothing is uploaded</span>
+          </label>
+        </li>
+      </ol>
+      <div class="sp-loaded" id="sp-loaded" hidden>
+        <span id="sp-file-name"></span>
+        <button type="button" class="ghost" id="sp-reset">use a different file</button>
+      </div>
+      <p class="sp-note">exportify is a free, independent tool. we just read the file it gives you.</p>
+      <div class="sp-login-row" id="sp-login-row" hidden>
+        <button type="button" id="sp-login">log in with spotify</button>
+        <span id="sp-who" class="sp-who" hidden></span>
+        <button type="button" id="sp-logout" class="ghost" hidden>log out</button>
+      </div>
     </div>
 
     <form id="form" class="form" autocomplete="off">
@@ -93,6 +113,7 @@
   <script src="config.js"></script>
   <script src="demo.js"></script>
   <script src="spotify.js"></script>
+  <script src="csvimport.js"></script>
   <script src="pdf.js"></script>
   <script src="app.js"></script>
 </body>

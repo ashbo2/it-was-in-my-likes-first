@@ -334,17 +334,79 @@
     if (src === "sp") spotifyUI();
   }
 
+  const FILE_KEY = "iwimlf:sp:file";
+
   function spotifyUI() {
+    // Login is only offered if a Spotify app is configured (limited to its allowlisted users).
     const loggedIn = !!Spotify.token();
+    $("sp-login-row").hidden = !Spotify.configured();
     $("sp-login").hidden = loggedIn;
     $("sp-logout").hidden = !loggedIn;
     $("sp-who").hidden = !(loggedIn && state.a);
     if (loggedIn && state.a) $("sp-who").innerHTML = `logged in as <b>${esc(state.a.user.username)}</b>`;
-    if (!Spotify.configured() && !DEMO) {
-      $("sp-login").disabled = true;
-      setStatus("spotify isn't set up on this site yet.");
+
+    // Exportify file flow
+    const fromFile = state.a && state.a.fromFile;
+    $("sp-steps").hidden = !!fromFile;
+    $("sp-loaded").hidden = !fromFile;
+    if (fromFile) $("sp-file-name").innerHTML = `loaded <b>${esc(state.a.fromFile)}</b> · ${n(state.a.items.length)} liked songs`;
+
+    // Restore a file loaded earlier in this tab
+    if (!state.a && !loggedIn) {
+      const hit = cacheGet(FILE_KEY);
+      if (hit) showSpotifyData(hit);
     }
   }
+
+  function showSpotifyData(data) {
+    state.a = data;
+    state.b = null;
+    state.focus = null;
+    state.shown1 = PAGE;
+    setStatus("");
+    $("single").hidden = false;
+    renderSingle();
+    spotifyUI();
+  }
+
+  async function readSpotifyFile(file) {
+    if (!file) return;
+    if (/\.zip$/i.test(file.name)) {
+      setStatus("that's a zip — export just Liked Songs from Exportify (the Export button on that row), not Export All", true);
+      return;
+    }
+    try {
+      setStatus("reading " + file.name + "…");
+      const { items, skipped } = window.parseExportify(await file.text());
+      const data = {
+        user: { id: "file", username: "you", permalink: "spotify", url: null, avatar: null, likes_count: items.length },
+        items,
+        fromFile: file.name,
+      };
+      cacheSet(FILE_KEY, data);
+      showSpotifyData(data);
+      if (skipped) setStatus(`${n(skipped)} song${skipped > 1 ? "s" : ""} had no like date and ${skipped > 1 ? "were" : "was"} skipped`);
+    } catch (e) {
+      setStatus(e.message || "couldn't read that file", true);
+    }
+  }
+
+  const drop = $("sp-drop");
+  $("sp-file").addEventListener("change", (e) => { readSpotifyFile(e.target.files[0]); e.target.value = ""; });
+  drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("sp-file").click(); } });
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => readSpotifyFile(e.dataTransfer.files[0]));
+  // Dropping a file anywhere else shouldn't navigate away from the page
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => { e.preventDefault(); if (state.src === "sp" && e.target !== drop && !drop.contains(e.target)) readSpotifyFile(e.dataTransfer.files[0]); });
+  $("sp-reset").addEventListener("click", () => {
+    try { sessionStorage.removeItem(FILE_KEY); } catch {}
+    state.a = null;
+    $("single").hidden = true;
+    setStatus("");
+    spotifyUI();
+  });
 
   async function runSpotify() {
     $("sp-login").disabled = true;
