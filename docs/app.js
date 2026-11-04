@@ -108,16 +108,23 @@
       ? `<b>${esc(user.username)}</b> · ${n(items.length)} ${state.src === "sp" ? "liked songs" : "public likes"} · liking since <span class="o">${oldest ? fmtDate(oldest) : "—"}</span>`
       : `<b>${esc(user.username)}</b> has no ${state.src === "sp" ? "liked songs" : "public likes"}.`;
 
-    $("list1").innerHTML = rows.length
-      ? rows.slice(0, state.shown1).map((x) => {
+    fillList(1, rows.slice(0, state.shown1).map((x) => {
           const [main, sub] = agoShort(x.liked_at);
           return `<li class="row${state.focus === x.id ? " hl" : ""}" tabindex="0" data-id="${esc(x.id)}">
             <span class="date">${fmtDate(x.liked_at)}</span>
             <span class="t"><div class="title">${esc(x.title)}</div><div class="artist">${esc(x.artist)}</div></span>
             <span class="ago">${main}<small>${sub}</small></span></li>`;
-        }).join("")
-      : `<li class="empty">${q ? "nothing matches that." : "no likes to show."}</li>`;
+        }), `<li class="empty">${q ? "nothing matches that." : "no likes to show."}</li>`);
     $("more1").hidden = rows.length <= state.shown1;
+  }
+
+  // Rows are split into two lists with one in-feed ad slot between them (after row FEED_AT).
+  // The slot is a static element, so searching/sorting never reloads the ad.
+  const FEED_AT = 20;
+  function fillList(n, rowsHtml, emptyHtml, head = "") {
+    $("list" + n).innerHTML = rowsHtml.length ? head + rowsHtml.slice(0, FEED_AT).join("") : emptyHtml;
+    $("list" + n + "b").innerHTML = rowsHtml.slice(FEED_AT).join("");
+    if (window.Ads) window.Ads.feed($("ad-feed" + n), rowsHtml.length > FEED_AT);
   }
 
   function buildShared() {
@@ -167,16 +174,14 @@
 
     const an = esc(A.user.username), bn = esc(B.user.username);
     const head = `<li class="cmp-head" aria-hidden="true"><span>song</span><span>${an}</span><span>${bn}</span><span>first</span></li>`;
-    $("list2").innerHTML = rows.length
-      ? head + rows.slice(0, state.shown2).map((x) => {
+    fillList(2, rows.slice(0, state.shown2).map((x) => {
           const who = x.first === "tie" ? "tie" : x.first === "a" ? an : bn;
           return `<li class="row cmp${state.focus === x.id ? " hl" : ""}" tabindex="0" data-id="${esc(x.id)}">
             <span class="t"><div class="title">${esc(x.title)}</div><div class="artist">${esc(x.artist)}</div></span>
             <span class="d2${x.first === "a" ? " win" : ""}"><small class="lbl">${an}</small>${fmtDate(x.a_at)}</span>
             <span class="d2${x.first === "b" ? " win" : ""}"><small class="lbl">${bn}</small>${fmtDate(x.b_at)}</span>
             <span class="ago">${who}<small>${gapText(x)}</small></span></li>`;
-        }).join("")
-      : `<li class="empty">${q ? "nothing matches that." : "no songs in common. yet."}</li>`;
+        }), `<li class="empty">${q ? "nothing matches that." : "no songs in common. yet."}</li>`, head);
     $("more2").hidden = rows.length <= state.shown2;
   }
 
@@ -265,7 +270,7 @@
   $("sort2").addEventListener("change", () => { state.shown2 = PAGE; renderCompare(); });
   $("more1").addEventListener("click", () => { state.shown1 += PAGE; renderSingle(); });
   $("more2").addEventListener("click", () => { state.shown2 += PAGE; renderCompare(); });
-  for (const list of [$("list1"), $("list2")]) {
+  for (const list of [$("list1"), $("list1b"), $("list2"), $("list2b")]) {
     list.addEventListener("click", (e) => { const r = e.target.closest(".row"); if (r) openCard(r.dataset.id); });
     list.addEventListener("keydown", (e) => { if (e.key === "Enter") { const r = e.target.closest(".row"); if (r) openCard(r.dataset.id); } });
   }

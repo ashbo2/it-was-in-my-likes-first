@@ -155,8 +155,14 @@ section { margin-top: 28px; }
 .names { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .sp-compare .drop { margin-top: 0; }
 
-/* ad banner (bottom of page) */
-.ad { margin-top: 48px; padding-top: 10px; border-top: 1px solid var(--line); min-height: 90px; }
+/* ads — see ADS.md */
 .ad-label { display: block; font: 10px var(--mono); color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+.ad-bottom { margin-top: 48px; padding-top: 10px; border-top: 1px solid var(--line); min-height: 100px; }
+.ad-feed { margin: 6px 0; padding: 14px 8px; border-bottom: 1px solid var(--line); min-height: 120px; }
+.ad-rail { position: fixed; top: 96px; right: max(16px, calc((100vw - 760px) / 4 - 80px)); width: 160px; }
+@media (max-width: 1279px), (max-height: 739px) { .ad-rail { display: none !important; } }
+/* ?adpreview placeholders */
+.ad-preview ins { text-decoration: none; display: grid !important; place-items: center; min-height: 90px; border: 1.5px dashed #3a3a3a; border-radius: 8px; color: #666; font: 11px var(--mono); text-align: center; padding: 8px; }
+.ad-rail.ad-preview ins { width: 160px; height: 600px; }
 .foot a { color: #777; }
 .foot a:hover { color: var(--orange); }

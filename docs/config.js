@@ -7,7 +7,14 @@ window.WORKER_URL = location.hostname.endsWith("github.io")
 // Spotify app Client ID (public, safe to commit). Leave empty to hide direct Spotify login.
 window.SPOTIFY_CLIENT_ID = "";
 
-// Google AdSense. Paste your publisher ID (ca-pub-…) and the ad unit's slot ID to turn the banner on.
-// Ads only show on inmylikes.com (AdSense won't serve on the other addresses).
-window.ADSENSE_CLIENT = "";
-window.ADSENSE_SLOT = "";
+// Google AdSense. Paste your publisher ID (ca-pub-…) and one ad-unit slot ID per placement.
+// A placement with an empty slot ID simply doesn't show. Ads only run on inmylikes.com.
+// Preview placements anywhere with ?adpreview. Details: ADS.md in the repo.
+window.ADSENSE = {
+  client: "",          // e.g. "ca-pub-1234567890123456"
+  slots: {
+    rail: "",          // desktop side rail, 160×600 display unit
+    feed: "",          // in-results unit (responsive display, or an in-feed unit)
+    bottom: "",        // bottom banner, responsive horizontal display unit
+  },
+};

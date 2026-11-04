@@ -98,6 +98,11 @@
         <button type="button" class="pdf ghost" data-list="1">export pdf</button>
       </div>
       <ol id="list1" class="list"></ol>
+      <div id="ad-feed1" class="ad ad-feed" data-ad="feed" hidden aria-label="advertisement">
+        <span class="ad-label">advertisement</span>
+        <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      </div>
+      <ol id="list1b" class="list"></ol>
       <button id="more1" class="more" hidden>show more</button>
     </section>
 
@@ -113,11 +118,16 @@
         <button type="button" class="pdf ghost" data-list="2">export pdf</button>
       </div>
       <ol id="list2" class="list"></ol>
+      <div id="ad-feed2" class="ad ad-feed" data-ad="feed" hidden aria-label="advertisement">
+        <span class="ad-label">advertisement</span>
+        <ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      </div>
+      <ol id="list2b" class="list"></ol>
       <button id="more2" class="more" hidden>show more</button>
     </section>
 
-    <aside id="ad" class="ad" hidden aria-label="advertisement">
-      <span class="ad-label">ad</span>
+    <aside id="ad-bottom" class="ad ad-bottom" data-ad="bottom" hidden aria-label="advertisement">
+      <span class="ad-label">advertisement</span>
       <ins class="adsbygoogle" style="display:block" data-ad-format="horizontal" data-full-width-responsive="true"></ins>
     </aside>
 
@@ -126,6 +136,12 @@
       <a href="privacy.html">about &amp; privacy</a>
     </footer>
   </main>
+
+  <!-- Desktop-only side rail (wide screens); sits in the empty right margin -->
+  <aside id="ad-rail" class="ad ad-rail" data-ad="rail" hidden aria-label="advertisement">
+    <span class="ad-label">advertisement</span>
+    <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px"></ins>
+  </aside>
 
   <dialog id="card" class="card">
     <div id="card-body"></div>
@@ -141,7 +157,7 @@
   <script src="spotify.js"></script>
   <script src="csvimport.js"></script>
   <script src="pdf.js"></script>
-  <script src="app.js"></script>
   <script src="ads.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
