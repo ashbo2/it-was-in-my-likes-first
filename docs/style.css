@@ -154,3 +154,9 @@ section { margin-top: 28px; }
 .sp-h code { font: 12px var(--mono); color: var(--text); background: var(--panel); padding: 1px 5px; border-radius: 4px; }
 .names { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .sp-compare .drop { margin-top: 0; }
+
+/* ad banner (bottom of page) */
+.ad { margin-top: 48px; padding-top: 10px; border-top: 1px solid var(--line); min-height: 90px; }
+.ad-label { display: block; font: 10px var(--mono); color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+.foot a { color: #777; }
+.foot a:hover { color: var(--orange); }

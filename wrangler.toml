@@ -9,4 +9,4 @@ directory = "./docs"
 
 [vars]
 # Only these sites may call the API (keeps strangers off your free quota).
-ALLOWED_ORIGINS = "https://ashbo2.github.io,https://it-was-in-my-likes-first.ashbo2mail.workers.dev"
+ALLOWED_ORIGINS = "https://inmylikes.com,https://www.inmylikes.com,https://ashbo2.github.io,https://it-was-in-my-likes-first.ashbo2mail.workers.dev"

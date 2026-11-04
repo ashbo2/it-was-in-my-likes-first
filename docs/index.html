@@ -6,6 +6,8 @@
   <title>it was in my likes first</title>
   <meta name="description" content="Prove you liked it on SoundCloud before everyone else.">
   <meta name="theme-color" content="#0a0a0a">
+  <link rel="canonical" href="https://inmylikes.com/">
+  <!-- adsense-verify -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ff5500'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,8 +116,14 @@
       <button id="more2" class="more" hidden>show more</button>
     </section>
 
+    <aside id="ad" class="ad" hidden aria-label="advertisement">
+      <span class="ad-label">ad</span>
+      <ins class="adsbygoogle" style="display:block" data-ad-format="horizontal" data-full-width-responsive="true"></ins>
+    </aside>
+
     <footer class="foot">
-      soundcloud: public likes only · not affiliated with soundcloud or spotify
+      soundcloud: public likes only · not affiliated with soundcloud or spotify ·
+      <a href="privacy.html">about &amp; privacy</a>
     </footer>
   </main>
 
@@ -134,5 +142,6 @@
   <script src="csvimport.js"></script>
   <script src="pdf.js"></script>
   <script src="app.js"></script>
+  <script src="ads.js"></script>
 </body>
 </html>
