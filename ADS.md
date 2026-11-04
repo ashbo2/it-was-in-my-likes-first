@@ -11,7 +11,7 @@ The placements are built and switched off. Filling in `window.ADSENSE` in `docs/
 
 Max 3 ads on desktop, 2 on phones. There are deliberately no ads near the inputs and buttons (accidental-click policy risk), in song cards, in PDFs, or before results load.
 
-Preview the spots anywhere by adding `?adpreview` to the URL. Pair it with `&demo&u=test` to get a list of fake results.
+Until AdSense is configured, every spot shows an empty "ad space" box. Set `placeholders: false` in `window.ADSENSE` to hide them. Add `?adpreview` to any URL to label each box with its placement name and size; pair it with `&demo&u=test` to get a list of fake results.
 
 ## Go-live checklist
 1. Get AdSense approval for `inmylikes.com`. Google needs these two things on the live site first:

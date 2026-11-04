@@ -8,8 +8,11 @@
   const cfg = window.ADSENSE || {};
   const slots = cfg.slots || {};
   const params = new URLSearchParams(location.search);
-  const preview = params.has("adpreview");
   const live = !!cfg.client && /(^|\.)inmylikes\.com$/.test(location.hostname) && !params.has("demo");
+  // Until AdSense is live, show empty "ad space" boxes (set placeholders: false in config.js to hide them).
+  // ?adpreview shows them with the placement name and size, for development.
+  const detail = params.has("adpreview");
+  const preview = !live && (detail || cfg.placeholders !== false);
   const SIZES = { rail: "160 × 600", feed: "responsive · in results", bottom: "responsive banner" };
   let scriptAdded = false;
 
@@ -29,9 +32,9 @@
   function fill(box) {
     if (!box || box.dataset.filled) return true;
     const name = box.dataset.ad;
-    if (preview && !live) {
+    if (preview) {
       box.classList.add("ad-preview");
-      box.querySelector("ins").textContent = `${name} ad · ${SIZES[name]}`;
+      box.querySelector("ins").textContent = detail ? `${name} ad · ${SIZES[name]}` : "ad space";
       box.dataset.filled = "1";
       return true;
     }
