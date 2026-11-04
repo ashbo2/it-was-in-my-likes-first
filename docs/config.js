@@ -14,7 +14,8 @@ window.ADSENSE = {
   client: "",          // e.g. "ca-pub-1234567890123456"
   placeholders: true,  // show empty "ad space" boxes until ads are live; false hides them
   slots: {
-    rail: "",          // desktop side rail, 160×600 display unit
+    railLeft: "",      // desktop left side rail, 160×600 display unit
+    rail: "",          // desktop right side rail, 160×600 display unit
     feed: "",          // in-results unit (responsive display, or an in-feed unit)
     bottom: "",        // bottom banner, responsive horizontal display unit
   },

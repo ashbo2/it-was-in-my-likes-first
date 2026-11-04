@@ -160,6 +160,7 @@ section { margin-top: 28px; }
 .ad-bottom { margin-top: 48px; padding-top: 10px; border-top: 1px solid var(--line); min-height: 100px; }
 .ad-feed { margin: 6px 0; padding: 14px 8px; border-bottom: 1px solid var(--line); min-height: 120px; }
 .ad-rail { position: fixed; top: 96px; right: max(16px, calc((100vw - 760px) / 4 - 80px)); width: 160px; }
+.ad-rail-left { right: auto; left: max(16px, calc((100vw - 760px) / 4 - 80px)); }
 @media (max-width: 1279px), (max-height: 739px) { .ad-rail { display: none !important; } }
 /* ?adpreview placeholders */
 .ad-preview ins { text-decoration: none; display: grid !important; place-items: center; min-height: 90px; border: 1.5px dashed #3a3a3a; border-radius: 8px; color: #666; font: 11px var(--mono); text-align: center; padding: 8px; }

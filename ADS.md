@@ -5,11 +5,12 @@ The placements are built and switched off. Filling in `window.ADSENSE` in `docs/
 ## Placements
 | Name | Where | Size | Shows on |
 |---|---|---|---|
+| `railLeft` | Fixed in the empty left margin | 160×600 display | Screens ≥1280px wide and ≥740px tall |
 | `rail` | Fixed in the empty right margin | 160×600 display | Screens ≥1280px wide and ≥740px tall |
 | `feed` | Between result rows 20 and 21 (SoundCloud + Spotify, single + compare) | Responsive display (or In-feed unit) | All, only when results have >20 rows |
 | `bottom` | Above the footer | Responsive horizontal display | All |
 
-Max 3 ads on desktop, 2 on phones. There are deliberately no ads near the inputs and buttons (accidental-click policy risk), in song cards, in PDFs, or before results load.
+Max 4 ads on desktop, 2 on phones. There are deliberately no ads near the inputs and buttons (accidental-click policy risk), in song cards, in PDFs, or before results load.
 
 Until AdSense is configured, every spot shows an empty "ad space" box. Set `placeholders: false` in `window.ADSENSE` to hide them. Add `?adpreview` to any URL to label each box with its placement name and size; pair it with `&demo&u=test` to get a list of fake results.
 
@@ -20,8 +21,8 @@ Until AdSense is configured, every spot shows an empty "ad space" box. Set `plac
    - `docs/ads.txt` containing:
      `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`
 2. In AdSense, turn on **Privacy & messaging → European regulations**. This is Google's consent banner, required for EEA/UK/CH visitors.
-3. Create 3 ad units (**Ads → By ad unit**): a 160×600 display unit, a responsive display unit, and a responsive horizontal display unit.
-4. Paste the publisher ID and the 3 slot IDs into `window.ADSENSE` in `docs/config.js`, then push. Cloudflare redeploys automatically.
+3. Create 4 ad units (**Ads → By ad unit**): two 160×600 display units (left and right rails), a responsive display unit, and a responsive horizontal display unit.
+4. Paste the publisher ID and the 4 slot IDs into `window.ADSENSE` in `docs/config.js`, then push. Cloudflare redeploys automatically.
 5. Leave **Auto ads** off in AdSense, or it will add extra placements on top of these.
 
 ## How it works (`docs/ads.js`)

@@ -1,5 +1,5 @@
 // Ad placements — see ADS.md in the repo for the full plan.
-//   rail   : 160×600, sticky in the right margin, wide desktop screens only
+//   railLeft / rail : 160×600, fixed in the left / right margin, wide desktop screens only
 //   feed   : responsive, between result rows 20 and 21 (only when there are more than 20 rows)
 //   bottom : responsive horizontal banner above the footer
 // Ads run only on inmylikes.com once window.ADSENSE has a client ID and slot IDs.
@@ -13,7 +13,7 @@
   // ?adpreview shows them with the placement name and size, for development.
   const detail = params.has("adpreview");
   const preview = !live && (detail || cfg.placeholders !== false);
-  const SIZES = { rail: "160 × 600", feed: "responsive · in results", bottom: "responsive banner" };
+  const SIZES = { rail: "160 × 600 · right", railLeft: "160 × 600 · left", feed: "responsive · in results", bottom: "responsive banner" };
   let scriptAdded = false;
 
   function loadScript() {
@@ -58,9 +58,10 @@
   const bottom = document.getElementById("ad-bottom");
   if (bottom) show(bottom);
 
-  // Side rail: only when the screen is wide enough to have an empty margin for it
-  const rail = document.getElementById("ad-rail");
-  if (rail && matchMedia("(min-width: 1280px) and (min-height: 740px)").matches) show(rail);
+  // Side rails: only when the screen is wide enough to have empty margins for them
+  if (matchMedia("(min-width: 1280px) and (min-height: 740px)").matches) {
+    for (const id of ["ad-rail-left", "ad-rail"]) { const el = document.getElementById(id); if (el) show(el); }
+  }
 
   window.Ads = {
     // Called by app.js after each render of a results list
