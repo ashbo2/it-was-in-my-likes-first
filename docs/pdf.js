@@ -33,7 +33,7 @@
   // Emoji aren't in the PDF font — drop them rather than print empty boxes.
   const clean = (v) => String(v ?? "").replace(/[\u{1F000}-\u{1FAFF}\u{FE0F}\u{200D}\u{20E3}]/gu, "").replace(/\s+/g, " ").trim();
 
-  window.exportPdf = async function ({ source, accent, title, subtitle, head, body, filename, dateCols = [0] }) {
+  window.exportPdf = async function ({ source, accent, title, subtitle, summary, head, body, filename, dateCols = [0] }) {
     const fonts = await load();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "letter" });
@@ -62,9 +62,14 @@
     doc.setFontSize(9);
     doc.setTextColor(...MUTED);
     doc.text(`${clean(subtitle)}  ·  exported ${today}`, M, 76);
+    if (summary) {
+      doc.setFont("DejaVu", "bold");
+      doc.setTextColor(...TEXT);
+      doc.text(clean(summary), M, 92);
+    }
 
     doc.autoTable({
-      startY: 92,
+      startY: summary ? 106 : 92,
       margin: { left: M, right: M, bottom: 40 },
       head: [head],
       body: body.map((r) => r.map(clean)),

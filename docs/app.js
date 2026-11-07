@@ -36,6 +36,30 @@
     return parts.join(", ");
   }
   const ago = (iso) => span(Date.parse(iso), Date.now());
+  // Durations for aggregate head-start stats (approximate months/years are fine for totals)
+  // Rounded to whole days under a month, whole months above, so displayed totals subtract cleanly.
+  const roundDur = (ms) => { const d = Math.round(ms / DAY); return d < 31 ? { d } : { m: Math.round(d / 30.44) }; };
+  function fmtParts(p) {
+    if (p.d !== undefined) return p.d < 1 ? "<1d" : `${p.d}d`;
+    const y = Math.floor(p.m / 12), m = p.m % 12;
+    return y ? (m ? `${y}y ${m}m` : `${y}y`) : `${m}mo`;
+  }
+  const fmtDur = (ms) => fmtParts(roundDur(ms));
+  // Net = difference of the two displayed totals
+  function fmtNet(aMs, bMs) {
+    const a = roundDur(aMs), b = roundDur(bMs);
+    if (a.m !== undefined && b.m !== undefined) return fmtParts({ m: Math.abs(a.m - b.m) });
+    return fmtDur(Math.abs(aMs - bMs));
+  }
+  // Per person: how many shared songs they had first, total and average head start on those songs
+  function headStats(list) {
+    const s = { a: { wins: 0, total: 0 }, b: { wins: 0, total: 0 } };
+    for (const x of list) if (x.first !== "tie") { s[x.first].wins++; s[x.first].total += x.gap; }
+    for (const k of ["a", "b"]) s[k].avg = s[k].wins ? s[k].total / s[k].wins : 0;
+    s.net = s.a.total - s.b.total; // > 0 means A is ahead overall
+    return s;
+  }
+
   // Head start between two people's like dates, in calendar terms
   const gapSpan = (x) => span(Date.parse(x.a_at), Date.parse(x.b_at));
   const gapText = (x) => { if (x.first === "tie") return "same time"; const s = gapSpan(x); return s.days === 0 ? "same day" : "by " + short(s); };
@@ -153,13 +177,17 @@
   function renderCompare() {
     const A = state.a, B = state.b;
     const shared = state.shared;
-    const aWins = shared.filter((x) => x.first === "a").length;
-    const bWins = shared.filter((x) => x.first === "b").length;
+    const hs = headStats(shared);
+    const aWins = hs.a.wins, bWins = hs.b.wins;
+    const leader = hs.net > 0 ? A.user.username : hs.net < 0 ? B.user.username : null;
 
     $("score").innerHTML = `
       <div class="side ${aWins > bWins ? "lead" : ""}"><div class="who">${esc(A.user.username)}</div><div class="n">${aWins}</div></div>
       <div class="mid"><b>${n(shared.length)}</b>shared likes<br>first to it</div>
-      <div class="side ${bWins > aWins ? "lead" : ""}"><div class="who">${esc(B.user.username)}</div><div class="n">${bWins}</div></div>`;
+      <div class="side ${bWins > aWins ? "lead" : ""}"><div class="who">${esc(B.user.username)}</div><div class="n">${bWins}</div></div>
+      <div class="hs side ${hs.net > 0 ? "lead" : ""}"><span>total</span><b>${fmtDur(hs.a.total)}</b><span>avg</span><b>${fmtDur(hs.a.avg)}</b></div>
+      <div class="hs mid">head start<br>${leader && fmtNet(hs.a.total, hs.b.total) !== "0mo" ? `<em>${esc(leader)} +${fmtNet(hs.a.total, hs.b.total)}</em><br>overall` : "<em>dead even</em>"}</div>
+      <div class="hs side ${hs.net < 0 ? "lead" : ""}"><span>total</span><b>${fmtDur(hs.b.total)}</b><span>avg</span><b>${fmtDur(hs.b.avg)}</b></div>`;
 
     const q = $("q2").value.trim().toLowerCase();
     const sort = $("sort2").value;
@@ -312,6 +340,13 @@
           source: state.src === "sp" ? "Spotify" : "SoundCloud",
           accent: state.src === "sp" ? [30, 215, 96] : [255, 85, 0],
           title: compare ? `${A.username} vs ${B.username}` : A.username,
+          summary: compare ? (() => {
+            const s = headStats(rows);
+            const line = (u, k) => `${u.username}: ${n(s[k].wins)} first · ${fmtDur(s[k].total)} total head start · ${fmtDur(s[k].avg)} avg`;
+            const lead = s.net > 0 ? A.username : s.net < 0 ? B.username : null;
+            const net = lead && fmtNet(s.a.total, s.b.total) !== "0mo" ? `${lead} +${fmtNet(s.a.total, s.b.total)} overall` : "dead even overall";
+            return `${line(A, "a")}  |  ${line(B, "b")}  |  ${net}`;
+          })() : null,
           subtitle: [
             compare ? `${n(rows.length)} shared likes` : `${n(rows.length)} ${state.src === "sp" ? "liked songs" : "likes"}`,
             q ? `filtered: "${q}"` : null,

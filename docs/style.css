@@ -82,6 +82,13 @@ section { margin-top: 28px; }
 .score .lead .n { color: var(--orange); }
 .score .mid { text-align: center; font: 12px var(--mono); color: var(--muted); }
 .score .mid b { display: block; color: var(--text); font: 700 20px var(--sans); }
+/* aggregate head start row */
+.score .hs { padding-top: 14px; border-top: 1px dashed var(--line); font: 12px var(--mono); color: var(--muted); }
+.score .hs.side { display: grid; grid-template-columns: auto auto; justify-content: start; gap: 2px 10px; align-items: baseline; }
+.score .hs.side:last-child { justify-content: end; }
+.score .hs b { color: var(--text); font: 700 16px var(--sans); }
+.score .hs.lead b { color: var(--orange); }
+.score .hs.mid em { font-style: normal; color: var(--text); font: 700 14px var(--sans); }
 
 .controls { display: grid; grid-template-columns: 1fr 190px auto; gap: 10px; margin-bottom: 8px; }
 .pdf { white-space: nowrap; color: var(--text) !important; }
